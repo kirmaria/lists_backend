@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="1" author="maria">
+
+        <!-- user table -->
+        <createTable tableName="user">
+            <column name="id" type="varchar(64)">
+                <constraints primaryKey="true" primaryKeyName="user_pk" nullable="false"/>
+            </column>
+            <column name="version" type="bigint"></column>
+            <column name="login_name" type="varchar(64)"></column>
+            <column name="email" type="varchar(64)"></column>
+            <column name="phone" type="varchar(64)"></column>
+            <column name="language" type="varchar(3)"></column>
+            <column name="enabled" type="boolean" defaultValue="false"></column>
+        </createTable>
+        <createIndex tableName="user" indexName="user_login_ndx" unique="true">
+            <column name="login_name"></column>
+        </createIndex>
+
+        <!-- list table -->
+        <createTable tableName="list">
+            <column name="id" type="varchar(64)">
+                <constraints primaryKey="true" primaryKeyName="list_pk" nullable="false"/>
+            </column>
+            <column name="version" type="bigint"></column>
+            <column name="name" type="varchar(64)"></column>
+            <column name="description" type="varchar(256)"></column>
+            <column name="type" type="varchar(64)"></column>
+            <column name="creator_id" type="varchar(64)"></column>
+            <column name="creation_timestamp" type="bigint"></column>
+            <column name="last_updater_id" type="varchar(64)"></column>
+            <column name="update_timestamp" type="bigint"></column>
+        </createTable>
+        <createIndex tableName="list" indexName="list_creator_id_name_ndx" >
+            <column name="creator_id"></column>
+            <column name="name"></column>
+        </createIndex>
+        <createIndex tableName="list" indexName="list_creator_id_type_ndx" >
+            <column name="creator_id"></column>
+            <column name="type"></column>
+        </createIndex>
+
+        <!-- item table -->
+        <createTable tableName="item">
+            <column name="id" type="varchar(64)">
+                <constraints primaryKey="true" primaryKeyName="item_pk" nullable="false"/>
+            </column>
+            <column name="version" type="bigint"></column>
+            <column name="label" type="varchar(64)"></column>
+            <column name="description" type="varchar(256)"></column>
+            <column name="unit" type="varchar(16)"></column>
+            <column name="quantity" type="int"></column>
+            <column name="media_id" type="varchar(64)"></column>
+            <column name="checked" type="boolean" defaultValue="false"></column>
+            <column name="list_id" type="varchar(64)"></column>
+        </createTable>
+        <createIndex tableName="item" indexName="item_list_id_ndx">
+            <column name="list_id"></column>
+        </createIndex>
+
+
+    </changeSet>
+</databaseChangeLog>
