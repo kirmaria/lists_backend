@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -145,6 +146,29 @@ public class ItemsListControllerTest {
         assertThat(item_1_3.getValue().getUnit()).isEqualTo(UnitType.kg);
         assertThat(item_1_3.getValue().getQty() == 3);
         assertThat(item_1_3.getValue().isChecked());
+
+        // duplicate <item_1_3> in <list_1>
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl("http://localhost:58252"+ ItemsListController.API_ITEMS_LIST + "/" + listDTO_1.getId() + "/items")
+                .queryParam("itemId", item_1_3.getId());
+        final ResponseEntity<ItemsListDTO> responseEntity_4 = restTemplate.exchange(
+                uriBuilder.toUriString(),
+                //ItemsListController.API_ITEMS_LIST + "/" + listDTO_1.getId() + "/items" + "?itemId=" + item_1_3.getId(),
+                HttpMethod.POST,
+                new HttpEntity<>(null, null),
+                ItemsListDTO.class
+        );
+        assertThat(responseEntity_4.getStatusCode()).isEqualTo(HttpStatus.OK);
+        listDTO_1 = responseEntity_4.getBody();
+        assertThat(listDTO_1.getItems()).hasSize(4);
+
+        ItemDTO item_1_4 = listDTO_1.getItems().get(3);
+
+        assertThat(item_1_4.getId()).isNotNull();
+        assertThat(item_1_4.getValue().getLabel()).isEqualTo(item_1_3.getValue().getLabel());
+        assertThat(item_1_4.getValue().getDescription()).isEqualTo(item_1_3.getValue().getDescription());
+        assertThat(item_1_4.getValue().getUnit()).isEqualTo(item_1_3.getValue().getUnit());
+        assertThat(item_1_4.getValue().getQty()).isEqualTo(item_1_3.getValue().getQty());
+        assertThat(item_1_4.getValue().isChecked()).isEqualTo(item_1_3.getValue().isChecked());
     }
 
     @Test

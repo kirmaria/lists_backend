@@ -6,6 +6,7 @@ import com.thekirschners.lists.dto.ItemsListDTO;
 import com.thekirschners.lists.dto.ItemsListValuesDTO;
 import com.thekirschners.lists.model.Item;
 import com.thekirschners.lists.model.ItemsList;
+import com.thekirschners.lists.model.Tuple;
 import com.thekirschners.lists.repository.ItemRepository;
 import com.thekirschners.lists.repository.ItemsListRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,9 +70,9 @@ public class ItemsListService {
     }
 
     public List<ItemsListDTO> getAllLists() {
-        List<ItemsListDTO> listsDTO  = new ArrayList<>();
+        List<ItemsListDTO> listsDTO = new ArrayList<>();
         ListIterator<ItemsList> it = itemsListRepository.findAll().listIterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             ItemsList list = it.next();
             listsDTO.add(list.getDTO());
         }
@@ -79,9 +80,8 @@ public class ItemsListService {
     }
 
 
-
     /**/
-    private ItemsList list_AddItem(ItemsList list, Item item) {
+    private ItemsList doAddItemToList(ItemsList list, Item item) {
         if ((list != null) && (item != null)) {
             list.getItems().add(item);
             item.setList(list);
@@ -89,11 +89,11 @@ public class ItemsListService {
         return list;
     }
 
-    private Optional<Item> list_FindItemById(ItemsList list, String itemId) {
+    private Optional<Item> doGetItemFromList(ItemsList list, String itemId) {
         return list.getItems().stream().filter(item -> item.getId().equals(itemId)).findFirst();
     }
 
-    private ItemsList list_RemoveItemById(ItemsList list, String itemId) {
+    private ItemsList doDeleteItemFromList(ItemsList list, String itemId) {
         list.setItems(list.getItems().stream().filter(item -> !(item.getId().equals(itemId))).collect(Collectors.toList()));
         return list;
     }
@@ -102,7 +102,7 @@ public class ItemsListService {
     /* items */
     public ItemsListDTO addItemToList(ItemValuesDTO itemValue, String listId) {
         return itemsListRepository.findById(listId)
-                .map(itemsList -> list_AddItem(itemsList, itemRepository.save(new Item().updateFromValuesDTO(itemValue).setList(itemsList))))
+                .map(itemsList -> doAddItemToList(itemsList, itemRepository.save(new Item().updateFromValuesDTO(itemValue).setList(itemsList))))
                 .map(itemsList -> itemsListRepository.save(itemsList).getDTO())
                 .orElseThrow(() -> new NoSuchElementException("addItemToList: itemsList <" + listId + "> not found!"));
     }
@@ -115,9 +115,17 @@ public class ItemsListService {
                 .orElseThrow(() -> new NoSuchElementException("updateValuesItem: item <" + itemId + "> not found!"));
     }
 
+    public ItemsListDTO duplicateItem(String listId, String itemId) {
+        return itemsListRepository.findById(listId)
+                .flatMap(list -> itemRepository.findById(itemId).map(item -> new Tuple<>(list, item)))
+                .map(tuple -> doAddItemToList(tuple.getA(), itemRepository.save(new Item().updateFromValuesDTO(tuple.getB().getValuesDTO()))))
+                .map(ItemsList::getDTO)
+                .orElseThrow(() -> new NoSuchElementException("ERROR duplicateItem : itemsList <" + listId + ">!"));
+    }
+
     public ItemDTO getItemFromList(String itemId, String listId) {
         return itemsListRepository.findById(listId)
-                .flatMap(itemsList -> list_FindItemById(itemsList, itemId))
+                .flatMap(itemsList -> doGetItemFromList(itemsList, itemId))
                 .map(item -> item.getDTO())
                 .orElseThrow(() -> new NoSuchElementException("getItemFromList: itemsList <" + listId + "> or item <" + itemId + "> not found!"));
     }
@@ -132,10 +140,10 @@ public class ItemsListService {
     public ItemsListDTO deleteItemFromList(String itemId, String listId) {
         return itemsListRepository.findById(listId)
                 .map(itemsList -> {
-                    if (list_FindItemById(itemsList, itemId).isEmpty())
+                    if (doGetItemFromList(itemsList, itemId).isEmpty())
                         throw new IllegalArgumentException("deleteItemFromList: Item <" + itemId + "> is not a member of list <" + listId + ">!");
                     else {
-                        ItemsList updatedList = list_RemoveItemById(itemsList, itemId);
+                        ItemsList updatedList = doDeleteItemFromList(itemsList, itemId);
                         itemRepository.deleteById(itemId);
                         return itemsListRepository.save(updatedList).getDTO();
                     }
@@ -148,8 +156,8 @@ public class ItemsListService {
         return itemRepository.findById(itemId)
                 .map(item -> {
                     ItemsList itemsList = item.getList();
-                    if (list_FindItemById(itemsList, itemId).isPresent()) {
-                        ItemsList updatedList = list_RemoveItemById(itemsList, itemId);
+                    if (doGetItemFromList(itemsList, itemId).isPresent()) {
+                        ItemsList updatedList = doDeleteItemFromList(itemsList, itemId);
                         itemsListRepository.save(updatedList);
                     }
                     itemRepository.delete(item);

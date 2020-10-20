@@ -93,14 +93,20 @@ public class ItemsListController {
     }
 
     @PostMapping(path = API_ITEMS_LIST+"/{listId}/items", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ItemsListDTO> addItemToList(@RequestBody ItemValuesDTO itemValuesDTO, @PathVariable("listId") String listId) {
+    public ResponseEntity<ItemsListDTO> addItemToList(@RequestBody ItemValuesDTO itemValuesDTO,
+                                                      @PathVariable("listId") String listId,
+                                                      @RequestParam(name="itemId", required = false, defaultValue = "") String itemId) {
         try {
-            listDTO = service.addItemToList(itemValuesDTO, listId);
+            if (Strings.isBlank(itemId))
+                listDTO = service.addItemToList(itemValuesDTO, listId);
+            else
+                listDTO = service.duplicateItem(listId, itemId);
             return ResponseEntity.ok(listDTO);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 
     @PutMapping(path = API_ITEM+"/{itemId}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ItemsListDTO> updateItemValues(@RequestBody ItemValuesDTO value, @PathVariable("itemId") String itemId) {
@@ -111,6 +117,7 @@ public class ItemsListController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 
     @GetMapping(path = API_ITEM+"/{itemId}/list/{listId}")
     public ResponseEntity<ItemDTO> getItemFromList(@PathVariable("itemId") String itemId, @PathVariable("listId") String listId) {
