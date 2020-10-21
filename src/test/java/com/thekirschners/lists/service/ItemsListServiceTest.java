@@ -70,7 +70,7 @@ public class ItemsListServiceTest {
     public void testAddItemToList() {
 
         // add first item to list_1
-        listDTO_1 = service.addItemToList(new ItemValuesDTO("item_1", "item_descr_1", UnitType.l, 2, false), listDTO_1.getId());
+        listDTO_1 = service.addItemToList(new ItemValuesDTO("item_1", "item_descr_1", UnitType.l, 2, false), listDTO_1.getId(), false);
         assertThat(listDTO_1.getItems()).hasSize(1);
         ItemDTO itemDTO = listDTO_1.getItems().get(0);
         itemId_1_1 = itemDTO.getId();
@@ -81,10 +81,10 @@ public class ItemsListServiceTest {
         assertThat(itemDTO.getValue().getQty() == 2);
         assertThat(!itemDTO.getValue().isChecked());
 
-        //add second item to list_1
-        listDTO_1 = service.addItemToList(new ItemValuesDTO("item_2", "item_descr_2", UnitType.m, 5, true), listDTO_1.getId());
+        //prepend second item to list_1
+        listDTO_1 = service.addItemToList(new ItemValuesDTO("item_2", "item_descr_2", UnitType.m, 5, true), listDTO_1.getId(), true);
         assertThat(listDTO_1.getItems()).hasSize(2);
-        itemDTO = listDTO_1.getItems().get(1);
+        itemDTO = listDTO_1.getItems().get(0); // <itemId_1_2> is the first item in list
         itemId_1_2 = itemDTO.getId();
         assertThat(itemDTO.getId()).isNotNull();
         assertThat(itemDTO.getValue().getLabel()).isEqualTo("item_2");
@@ -94,33 +94,13 @@ public class ItemsListServiceTest {
         assertThat(itemDTO.getValue().isChecked());
     }
 
+
     @Test
     @Order(4)
-    public void testDuplicateItemInList() {
-
-        assertThat(itemId_1_1).isNotNull();
-        ItemDTO origItem = listDTO_1.getItems().get(0);
-
-        // duplicate <itemId_1_1> item in <list_1>
-        listDTO_1 = service.duplicateItem(listDTO_1.getId(), itemId_1_1);
-        assertThat(listDTO_1.getItems()).hasSize(3);
-
-        ItemDTO itemDTO = listDTO_1.getItems().get(2);
-        assertThat(itemDTO.getId()).isNotNull();
-        assertThat(itemDTO.getValue().getLabel()).isEqualTo(origItem.getValue().getLabel());
-        assertThat(itemDTO.getValue().getDescription()).isEqualTo(origItem.getValue().getDescription());
-        assertThat(itemDTO.getValue().getUnit()).isEqualTo(origItem.getValue().getUnit());
-        assertThat(itemDTO.getValue().getQty()).isEqualTo(origItem.getValue().getQty());
-        assertThat(itemDTO.getValue().isChecked()).isEqualTo(origItem.getValue().isChecked());
-    }
-
-
-    @Test
-    @Order(5)
     public void testGetList() {
         //get first list
         ItemsListDTO listDTO = service.getList(listDTO_1.getId());
-        assertThat(listDTO.getItems()).hasSize(3);
+        assertThat(listDTO.getItems()).hasSize(2);
         assertThat(listDTO.getValue().getDescription()).isEqualTo(listDTO_1.getValue().getDescription());
         assertThat(listDTO.getValue().getType()).isEqualTo(listDTO_1.getValue().getType());
         assertThat(listDTO.getId()).isEqualTo(listDTO_1.getId());
@@ -135,7 +115,7 @@ public class ItemsListServiceTest {
 
 
     @Test
-    @Order(6)
+    @Order(5)
     public void testGetLists() {
         List<ItemsListDTO> listsDTO = service.getAllLists();
         assertThat(listsDTO).hasSize(2);
@@ -144,7 +124,7 @@ public class ItemsListServiceTest {
     }
 
     @Test
-    @Order(7)
+    @Order(6)
     public void testGetItemFromList() {
         ItemDTO itemDTO = service.getItemFromList(itemId_1_1, listDTO_1.getId());
         assertThat(itemDTO.getId()).isEqualTo(itemId_1_1);
@@ -156,7 +136,7 @@ public class ItemsListServiceTest {
     }
 
     @Test
-    @Order(8)
+    @Order(7)
     public void testGetItem() {
         ItemDTO itemDTO = service.getItem(itemId_1_2);
         assertThat(itemDTO.getId()).isEqualTo(itemId_1_2);
@@ -168,11 +148,11 @@ public class ItemsListServiceTest {
     }
 
     @Test
-    @Order(9)
+    @Order(8)
     public void testDeleteItemFromList() {
         //delete item <itemId_1>, an existing item from list
         listDTO_1 = service.deleteItemFromList(itemId_1_1, listDTO_1.getId());
-        assertThat(listDTO_1.getItems()).hasSize(2);
+        assertThat(listDTO_1.getItems()).hasSize(1);
 
         //test if deleted item is still in list
         assertThatThrownBy(() -> service.getItemFromList(itemId_1_1, listDTO_1.getId()))
@@ -187,7 +167,7 @@ public class ItemsListServiceTest {
     }
 
     @Test
-    @Order(10)
+    @Order(9)
     public void testDeleteItem() {
 
         //delete itemId_2 from list
@@ -201,7 +181,7 @@ public class ItemsListServiceTest {
     }
 
     @Test
-    @Order(11)
+    @Order(10)
     public void testDeleteAllItemsFromList() {
         listDTO_1 = service.deleteAllItemsFromList(listDTO_1.getId());
         assertThat(listDTO_1).isNotNull();
@@ -209,7 +189,7 @@ public class ItemsListServiceTest {
     }
 
     @Test
-    @Order(12)
+    @Order(11)
     public void testDeleteList() {
         assertThat(service.deleteList(listDTO_1.getId()));
     }

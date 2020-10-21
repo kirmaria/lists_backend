@@ -81,9 +81,12 @@ public class ItemsListService {
 
 
     /**/
-    private ItemsList doAddItemToList(ItemsList list, Item item) {
+    private ItemsList doAddItemToList(ItemsList list, Item item, boolean prepend) {
         if ((list != null) && (item != null)) {
-            list.getItems().add(item);
+            if (prepend)
+                list.getItems().add(0, item);
+            else
+                list.getItems().add(item);
             item.setList(list);
         }
         return list;
@@ -100,12 +103,13 @@ public class ItemsListService {
 
 
     /* items */
-    public ItemsListDTO addItemToList(ItemValuesDTO itemValue, String listId) {
+    public ItemsListDTO addItemToList(ItemValuesDTO itemValue, String listId, boolean prepend) {
         return itemsListRepository.findById(listId)
-                .map(itemsList -> doAddItemToList(itemsList, itemRepository.save(new Item().updateFromValuesDTO(itemValue).setList(itemsList))))
+                .map(itemsList -> doAddItemToList(itemsList, itemRepository.save(new Item().updateFromValuesDTO(itemValue).setList(itemsList)), prepend))
                 .map(itemsList -> itemsListRepository.save(itemsList).getDTO())
                 .orElseThrow(() -> new NoSuchElementException("addItemToList: itemsList <" + listId + "> not found!"));
     }
+
 
     public ItemsListDTO updateItemValues(ItemValuesDTO value, String itemId) {
         return itemRepository.findById(itemId)
@@ -115,13 +119,6 @@ public class ItemsListService {
                 .orElseThrow(() -> new NoSuchElementException("updateValuesItem: item <" + itemId + "> not found!"));
     }
 
-    public ItemsListDTO duplicateItem(String listId, String itemId) {
-        return itemsListRepository.findById(listId)
-                .flatMap(list -> itemRepository.findById(itemId).map(item -> new Tuple<>(list, item)))
-                .map(tuple -> doAddItemToList(tuple.getA(), itemRepository.save(new Item().updateFromValuesDTO(tuple.getB().getValuesDTO()))))
-                .map(ItemsList::getDTO)
-                .orElseThrow(() -> new NoSuchElementException("ERROR duplicateItem : itemsList <" + listId + ">!"));
-    }
 
     public ItemDTO getItemFromList(String itemId, String listId) {
         return itemsListRepository.findById(listId)

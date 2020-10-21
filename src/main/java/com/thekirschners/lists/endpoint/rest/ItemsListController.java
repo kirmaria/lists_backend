@@ -9,6 +9,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -95,17 +98,16 @@ public class ItemsListController {
     @PostMapping(path = API_ITEMS_LIST+"/{listId}/items", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ItemsListDTO> addItemToList(@RequestBody ItemValuesDTO itemValuesDTO,
                                                       @PathVariable("listId") String listId,
-                                                      @RequestParam(name="itemId", required = false, defaultValue = "") String itemId) {
+                                                      @RequestParam(name="prepend", required = false, defaultValue = "false") boolean prepend) {
         try {
-            if (Strings.isBlank(itemId))
-                listDTO = service.addItemToList(itemValuesDTO, listId);
-            else
-                listDTO = service.duplicateItem(listId, itemId);
+            listDTO = service.addItemToList(itemValuesDTO, listId, prepend);
             return ResponseEntity.ok(listDTO);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+
 
 
     @PutMapping(path = API_ITEM+"/{itemId}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
