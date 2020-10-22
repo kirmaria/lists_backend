@@ -9,9 +9,6 @@ public class UserValuesDTO {
     @JsonProperty("email")
     String email;
 
-    @JsonProperty("phone")
-    String phone;
-
     @JsonProperty("language")
     String preferredLanguage;
 
@@ -19,14 +16,15 @@ public class UserValuesDTO {
     boolean enabled;
 
     public UserValuesDTO() {
+        this.loginName = "";
+        this.email = "";
+        this.preferredLanguage = "EN";
+        this.enabled = false;
     }
 
-    public UserValuesDTO(String loginName, String email, String phone, String email1, String phone1, String preferredLanguage, boolean enabled) {
+    public UserValuesDTO(String loginName, String email, String preferredLanguage, boolean enabled) {
         this.loginName = loginName;
         this.email = email;
-        this.phone = phone;
-        this.email = email1;
-        this.phone = phone1;
         this.preferredLanguage = preferredLanguage;
         this.enabled = enabled;
     }
@@ -49,14 +47,6 @@ public class UserValuesDTO {
         return this;
     }
 
-    public String getPhone() {
-        return phone;
-    }
-
-    public UserValuesDTO setPhone(String phone) {
-        this.phone = phone;
-        return this;
-    }
 
     public String getPreferredLanguage() {
         return preferredLanguage;

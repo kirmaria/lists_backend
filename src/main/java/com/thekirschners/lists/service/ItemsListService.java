@@ -27,7 +27,12 @@ public class ItemsListService {
     @Autowired
     ItemRepository itemRepository;
 
+    @Autowired
+    UserService userService;
+
     public ItemsListDTO createList(ItemsListValuesDTO value) {
+        userService.createUserIfNotExist();
+
         return itemsListRepository.save(new ItemsList().updateFromValuesDTO(value)).getDTO();
     }
 
