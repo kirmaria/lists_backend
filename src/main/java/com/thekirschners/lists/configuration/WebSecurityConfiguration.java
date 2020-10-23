@@ -3,8 +3,9 @@ package com.thekirschners.lists.configuration;
 import com.auth0.jwk.*;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.thekirschners.lists.utils.UserPrincipal;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -14,21 +15,19 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.security.interfaces.RSAPublicKey;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 
 @EnableWebSecurity
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+    public static final String JWK_URL = "https://dev-pjs46xuy.eu.auth0.com";
 
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
@@ -42,8 +41,14 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .jwt(jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(new Converter<Jwt, AbstractAuthenticationToken>() {
                     @Override
                     public AbstractAuthenticationToken convert(Jwt source) {
+
+                        Optional<String> nickname = Optional.ofNullable((Claim) source.getClaims().get("nickname")).map(c -> c.asString());
+                        Optional<String> email = Optional.ofNullable((Claim) source.getClaims().get("email")).map(c -> c.asString());
+
+                        UserPrincipal userPrincipal = new UserPrincipal(source.getSubject(), nickname.orElse("undefined" + UUID.randomUUID().toString()), email.orElse("undefined"));
+
                         return new UsernamePasswordAuthenticationToken(
-                                source.getSubject(),
+                                userPrincipal,
                                 null,
                                 List.of()
                         );
@@ -69,7 +74,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     JwtDecoder jwtDecoder() {
         return token -> {
             DecodedJWT jwt = JWT.decode(token);
-            JwkProvider provider = new UrlJwkProvider("https://dev-pjs46xuy.eu.auth0.com");
+            JwkProvider provider = new UrlJwkProvider(JWK_URL);
             try {
                 Jwk jwk = provider.get(jwt.getKeyId());
                 Algorithm algorithm = null;
@@ -83,6 +88,8 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
                     .audience(jwt.getAudience())
                     .issuer(jwt.getIssuer())
                     .subject(jwt.getSubject())
+                    .claim("nickname", jwt.getClaim("nickname"))
+                    .claim("email", jwt.getClaim("email"))
                     .issuedAt(jwt.getIssuedAt().toInstant())
                     .expiresAt(jwt.getExpiresAt().toInstant())
                     .header("x", "y")

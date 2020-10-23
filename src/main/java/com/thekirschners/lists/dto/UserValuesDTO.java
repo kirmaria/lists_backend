@@ -4,7 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class UserValuesDTO {
     @JsonProperty("login_name")
-    String loginName;
+    String subject;
+
+    @JsonProperty("nick_name")
+    String nickName;
 
     @JsonProperty("email")
     String email;
@@ -16,25 +19,36 @@ public class UserValuesDTO {
     boolean enabled;
 
     public UserValuesDTO() {
-        this.loginName = "";
+        this.subject = "";
+        this.nickName = "";
         this.email = "";
         this.preferredLanguage = "EN";
-        this.enabled = false;
+        this.enabled = true;
     }
 
-    public UserValuesDTO(String loginName, String email, String preferredLanguage, boolean enabled) {
-        this.loginName = loginName;
+    public UserValuesDTO(String subject, String nickName, String email, String preferredLanguage, boolean enabled) {
+        this.subject = subject;
+        this.nickName = nickName;
         this.email = email;
         this.preferredLanguage = preferredLanguage;
         this.enabled = enabled;
     }
 
-    public String getLoginName() {
-        return loginName;
+    public String getSubject() {
+        return subject;
     }
 
-    public UserValuesDTO setLoginName(String loginName) {
-        this.loginName = loginName;
+    public UserValuesDTO setSubject(String subject) {
+        this.subject = subject;
+        return this;
+    }
+
+    public String getNickName() {
+        return nickName;
+    }
+
+    public UserValuesDTO setNickName(String nickName) {
+        this.nickName = nickName;
         return this;
     }
 

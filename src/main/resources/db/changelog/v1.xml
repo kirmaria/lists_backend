@@ -15,14 +15,17 @@
                 <constraints primaryKey="true" primaryKeyName="user_pk" nullable="false"/>
             </column>
             <column name="version" type="bigint"></column>
-            <column name="login_name" type="varchar(64)"></column>
+            <column name="subject" type="varchar(128)"></column>
+            <column name="nick_name" type="varchar(64)"></column>
             <column name="email" type="varchar(64)"></column>
-            <column name="phone" type="varchar(64)"></column>
             <column name="language" type="varchar(3)"></column>
             <column name="enabled" type="boolean" defaultValue="false"></column>
         </createTable>
-        <createIndex tableName="user" indexName="user_login_ndx" unique="true">
-            <column name="login_name"></column>
+        <createIndex tableName="user" indexName="user_subject_ndx" unique="true">
+            <column name="subject"></column>
+        </createIndex>
+        <createIndex tableName="user" indexName="user_nick_name_ndx" unique="true">
+            <column name="nick_name"></column>
         </createIndex>
 
         <!-- list table -->
@@ -34,19 +37,15 @@
             <column name="name" type="varchar(64)"></column>
             <column name="description" type="varchar(256)"></column>
             <column name="type" type="varchar(64)"></column>
-            <column name="creator_id" type="varchar(64)"></column>
+            <column name="owner" type="varchar(128)"></column>
             <column name="creation_timestamp" type="bigint"></column>
-            <column name="last_updater_id" type="varchar(64)"></column>
+            <column name="invites" type="text"></column>
             <column name="update_timestamp" type="bigint"></column>
         </createTable>
-        <createIndex tableName="list" indexName="list_creator_id_name_ndx" >
-            <column name="creator_id"></column>
-            <column name="name"></column>
+        <createIndex tableName="list" indexName="list_owner_ndx" >
+            <column name="owner"></column>
         </createIndex>
-        <createIndex tableName="list" indexName="list_creator_id_type_ndx" >
-            <column name="creator_id"></column>
-            <column name="type"></column>
-        </createIndex>
+
 
         <!-- item table -->
         <createTable tableName="item">

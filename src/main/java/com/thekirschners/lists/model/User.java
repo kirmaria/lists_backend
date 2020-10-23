@@ -15,7 +15,11 @@ public class User extends IdentifierBase {
 
     @NotNull
     @Column(name = "login_name")
-    String loginName;
+    String subject;
+
+    @NotNull
+    @Column(name = "nick_name")
+    String nickName;
 
     @NotNull
     @Column(name = "email")
@@ -34,22 +38,31 @@ public class User extends IdentifierBase {
     public User() {
     }
 
-    public User(@NotNull String loginName, @NotNull String email, @Length(min = 2, max = 3, message = "must be a 2 or 3 letter long ISO language code") String preferredLanguage, @NotNull boolean enabled) {
-        this.loginName = loginName;
+    public User(@NotNull String subject, @NotNull String nickName, @NotNull String email, @Length(min = 2, max = 3, message = "must be a 2 or 3 letter long ISO language code") String preferredLanguage, @NotNull boolean enabled) {
+        this.subject = subject;
+        this.nickName = nickName;
         this.email = email;
         this.preferredLanguage = preferredLanguage;
         this.enabled = enabled;
     }
 
-    public String getLoginName() {
-        return loginName;
+    public String getSubject() {
+        return subject;
     }
 
-    public User setLoginName(String loginName) {
-        this.loginName = loginName;
+    public User setSubject(String subject) {
+        this.subject = subject;
         return this;
     }
 
+    public String getNickName() {
+        return nickName;
+    }
+
+    public User setNickName(String nickName) {
+        this.nickName = nickName;
+        return this;
+    }
 
     public String getEmail() {
         return email;
@@ -81,7 +94,8 @@ public class User extends IdentifierBase {
 
     /* DTO */
     public User updateFromValuesDTO(UserValuesDTO value) {
-        this.setLoginName(value.getLoginName());
+        this.setSubject(value.getSubject());
+        this.setNickName(value.getNickName());
         this.setEmail(value.getEmail());
         this.setPreferredLanguage(value.getPreferredLanguage());
         this.setEnabled(value.isEnabled());
@@ -89,7 +103,8 @@ public class User extends IdentifierBase {
     }
 
     public User updateFromDTO(UserDTO dto) {
-        this.setLoginName(dto.getValue().getLoginName());
+        this.setSubject(dto.getValue().getSubject());
+        this.setNickName(dto.getValue().getNickName());
         this.setEmail(dto.getValue().getEmail());
         this.setPreferredLanguage(dto.getValue().getPreferredLanguage());
         this.setEnabled(dto.getValue().isEnabled());
@@ -98,7 +113,8 @@ public class User extends IdentifierBase {
 
     public UserValuesDTO getValuesDTO() {
         UserValuesDTO value = new UserValuesDTO();
-        value.setLoginName(this.loginName);
+        value.setSubject(this.subject);
+        value.setNickName(this.nickName);
         value.setEmail(this.email);
         value.setPreferredLanguage(this.preferredLanguage);
         value.setEnabled(this.enabled);

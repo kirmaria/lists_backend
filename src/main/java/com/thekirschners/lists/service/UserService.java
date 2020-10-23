@@ -4,6 +4,7 @@ import com.thekirschners.lists.model.User;
 import com.thekirschners.lists.dto.UserDTO;
 import com.thekirschners.lists.dto.UserValuesDTO;
 import com.thekirschners.lists.repository.UserRepository;
+import com.thekirschners.lists.utils.UserPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -18,11 +19,15 @@ public class UserService {
 
 
     public UserDTO createUserIfNotExist() {
+        UserPrincipal userPrincipal = UserPrincipal.class.cast(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
-        String loginName = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+        UserValuesDTO userValuesDTO = new UserValuesDTO()
+                .setSubject(userPrincipal.getSubject())
+                .setNickName(userPrincipal.getNickName())
+                .setEmail(userPrincipal.getEmail());
 
-        return userRepository.findByLoginName(loginName)
-                .orElseGet(() -> {return userRepository.save(new User().updateFromValuesDTO(new UserValuesDTO().setLoginName(loginName)));}).getDTO();
+        return userRepository.findBySubject(userPrincipal.getSubject())
+                .orElseGet(() -> {return userRepository.save(new User().updateFromValuesDTO(userValuesDTO));}).getDTO();
 
     }
 }

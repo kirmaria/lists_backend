@@ -3,7 +3,9 @@ package com.thekirschners.lists.model;
 import com.thekirschners.lists.dto.ItemDTO;
 import com.thekirschners.lists.dto.ItemsListDTO;
 import com.thekirschners.lists.dto.ItemsListValuesDTO;
+import com.thekirschners.lists.utils.StringListConverter;
 import jdk.jfr.Timestamp;
+import org.hibernate.validator.constraints.UniqueElements;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -27,17 +29,11 @@ public class ItemsList extends IdentifierBase {
     @Enumerated(value = EnumType.STRING)
     ListType type;
 
-    @NotNull
-    @Column(name = "creator_id", updatable = false, nullable = false, length = 64)
-    String creatorId;
 
     @NotNull
     @Column(name = "creation_timestamp")
     long creationTimestamp;
 
-    @NotNull
-    @Column(name = "last_updater_id", length = 64)
-    String lastUpdaterId;
 
     @NotNull
     @Column(name = "update_timestamp")
@@ -46,23 +42,38 @@ public class ItemsList extends IdentifierBase {
     @OneToMany(targetEntity = Item.class, mappedBy = "list", fetch = FetchType.EAGER)
     List<Item> items;
 
+
+    @NotNull
+    @Column(name = "owner", updatable = false, nullable = false, length = 128)
+    String owner;
+
+    @Convert(converter = StringListConverter.class)
+    @Column(name = "invites")
+    List<String> invites;
+
+
     public ItemsList() {
-        items = new ArrayList<>();
+        this.name = "";
+        this.description = "";
+        this.type = ListType.CHECKING_LIST;
+        this.creationTimestamp = Instant.now().toEpochMilli();
+        this.updateTimestamp = Instant.now().toEpochMilli();
+        this.items = new ArrayList<>();
+        this.invites = new ArrayList<>();
     }
 
-    public ItemsList(@NotNull String name, String description, @NotNull ListType type, @NotNull String creatorId) {
-        this();
+    public ItemsList(@NotNull String name, String description, @NotNull ListType type, @NotNull String owner, List<String> invites) {
         this.name = name;
         this.description = description;
         this.type = type;
-        this.creatorId = creatorId;
         this.creationTimestamp = Instant.now().toEpochMilli();
-        this.lastUpdaterId = creatorId;
         this.updateTimestamp = Instant.now().toEpochMilli();
+        this.owner = owner;
+        this.invites = invites;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public ItemsList setName(String name) {
@@ -71,7 +82,7 @@ public class ItemsList extends IdentifierBase {
     }
 
     public String getDescription() {
-        return description;
+        return this.description;
     }
 
     public ItemsList setDescription(String description) {
@@ -80,7 +91,7 @@ public class ItemsList extends IdentifierBase {
     }
 
     public ListType getType() {
-        return type;
+        return this.type;
     }
 
     public ItemsList setType(ListType type) {
@@ -88,17 +99,17 @@ public class ItemsList extends IdentifierBase {
         return this;
     }
 
-    public String getCreatorId() {
-        return creatorId;
+    public String getOwner() {
+        return this.owner;
     }
 
-    public ItemsList setCreatorId(String creatorId) {
-        this.creatorId = creatorId;
+    public ItemsList setOwner(String owner) {
+        this.owner = owner;
         return this;
     }
 
     public long getCreationTimestamp() {
-        return creationTimestamp;
+        return this.creationTimestamp;
     }
 
     public ItemsList setCreationTimestamp(long creationTimestamp) {
@@ -106,17 +117,17 @@ public class ItemsList extends IdentifierBase {
         return this;
     }
 
-    public String getLastUpdaterId() {
-        return lastUpdaterId;
+    public List<String> getInvites() {
+        return this.invites;
     }
 
-    public ItemsList setLastUpdaterId(String lastUpdaterId) {
-        this.lastUpdaterId = lastUpdaterId;
+    public ItemsList setInvites(List<String> invites) {
+        this.invites = invites;
         return this;
     }
 
     public long getUpdateTimestamp() {
-        return updateTimestamp;
+        return this.updateTimestamp;
     }
 
     public ItemsList setUpdateTimestamp(long updateTimestamp) {
@@ -125,11 +136,11 @@ public class ItemsList extends IdentifierBase {
     }
 
     public List<Item> getItems() {
-        return items;
+        return this.items;
     }
 
-    public ItemsList setItems(List<Item> newItems) {
-        items = newItems;
+    public ItemsList setItems(List<Item> items) {
+        this.items = items;
         return this;
     }
 
@@ -138,9 +149,7 @@ public class ItemsList extends IdentifierBase {
         this.setName(value.getName());
         this.setDescription(value.getDescription());
         this.setType(value.getType());
-        this.setCreatorId("TITI");
         this.setCreationTimestamp(Instant.now().toEpochMilli());
-        this.setLastUpdaterId("TITI");
         this.setUpdateTimestamp(Instant.now().toEpochMilli());
         return this;
     }
@@ -159,6 +168,9 @@ public class ItemsList extends IdentifierBase {
 
         dto.setId(id);
         dto.setValue(getValuesDTO());
+
+        dto.setOwner(owner);
+        dto.setInvites(invites);
 
         dto.getItems().clear();
         for (Item item : items) {
