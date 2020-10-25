@@ -14,7 +14,7 @@ import javax.validation.constraints.NotNull;
 public class User extends IdentifierBase {
 
     @NotNull
-    @Column(name = "login_name")
+    @Column(name = "subject")
     String subject;
 
     @NotNull

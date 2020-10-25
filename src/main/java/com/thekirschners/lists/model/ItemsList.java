@@ -3,6 +3,7 @@ package com.thekirschners.lists.model;
 import com.thekirschners.lists.dto.ItemDTO;
 import com.thekirschners.lists.dto.ItemsListDTO;
 import com.thekirschners.lists.dto.ItemsListValuesDTO;
+import com.thekirschners.lists.utils.ItemsListEntityListener;
 import com.thekirschners.lists.utils.StringListConverter;
 import jdk.jfr.Timestamp;
 import org.hibernate.validator.constraints.UniqueElements;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "list")
+@EntityListeners(ItemsListEntityListener.class)
 public class ItemsList extends IdentifierBase {
     @NotNull
     @Column(name = "name", nullable = false, length = 64)
@@ -62,14 +64,12 @@ public class ItemsList extends IdentifierBase {
         this.invites = new ArrayList<>();
     }
 
-    public ItemsList(@NotNull String name, String description, @NotNull ListType type, @NotNull String owner, List<String> invites) {
+    public ItemsList(@NotNull String name, String description, @NotNull ListType type) {
         this.name = name;
         this.description = description;
         this.type = type;
         this.creationTimestamp = Instant.now().toEpochMilli();
         this.updateTimestamp = Instant.now().toEpochMilli();
-        this.owner = owner;
-        this.invites = invites;
     }
 
     public String getName() {

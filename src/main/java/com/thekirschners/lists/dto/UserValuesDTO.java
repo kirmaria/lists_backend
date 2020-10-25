@@ -79,4 +79,15 @@ public class UserValuesDTO {
         this.enabled = enabled;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "UserValuesDTO{" +
+                "subject='" + subject + '\'' +
+                ", nickName='" + nickName + '\'' +
+                ", email='" + email + '\'' +
+                ", preferredLanguage='" + preferredLanguage + '\'' +
+                ", enabled=" + enabled +
+                '}';
+    }
 }
