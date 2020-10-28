@@ -6,6 +6,9 @@ import com.thekirschners.lists.dto.ItemsListValuesDTO;
 import com.thekirschners.lists.utils.ItemsListEntityListener;
 import com.thekirschners.lists.utils.StringListConverter;
 import jdk.jfr.Timestamp;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.validator.constraints.UniqueElements;
 
 import javax.persistence.*;
@@ -18,7 +21,14 @@ import java.util.List;
 @Entity
 @Table(name = "list")
 @EntityListeners(ItemsListEntityListener.class)
+@FilterDef(name = ItemsList.FILTER_NAME_USER, parameters = {@ParamDef(name = ItemsList.FILTER_PARAM_NAME_USER, type = "string")})
+@Filter(name = ItemsList.FILTER_NAME_USER, condition = ItemsList.USER_FILTER_CLAUSE)
+
 public class ItemsList extends IdentifierBase {
+    public static final String FILTER_NAME_USER = "USER_FILTER";
+    public static final String FILTER_PARAM_NAME_USER = "USER_PARAM";
+    public static final String USER_FILTER_CLAUSE = "(owner = :" + FILTER_PARAM_NAME_USER + ")";
+
     @NotNull
     @Column(name = "name", nullable = false, length = 64)
     String name;

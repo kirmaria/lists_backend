@@ -85,28 +85,6 @@ public class ItemsListService {
     }
 
 
-    /**/
-    private ItemsList doAddItemToList(ItemsList list, Item item, boolean prepend) {
-        if ((list != null) && (item != null)) {
-            if (prepend)
-                list.getItems().add(0, item);
-            else
-                list.getItems().add(item);
-            item.setList(list);
-        }
-        return list;
-    }
-
-    private Optional<Item> doGetItemFromList(ItemsList list, String itemId) {
-        return list.getItems().stream().filter(item -> item.getId().equals(itemId)).findFirst();
-    }
-
-    private ItemsList doDeleteItemFromList(ItemsList list, String itemId) {
-        list.setItems(list.getItems().stream().filter(item -> !(item.getId().equals(itemId))).collect(Collectors.toList()));
-        return list;
-    }
-
-
     /* items */
     public ItemsListDTO addItemToList(ItemValuesDTO itemValue, String listId, boolean prepend) {
         return itemsListRepository.findById(listId)
@@ -200,4 +178,26 @@ public class ItemsListService {
         return false;
     }
 
+
+
+    /* PRIVATE */
+    private ItemsList doAddItemToList(ItemsList list, Item item, boolean prepend) {
+        if ((list != null) && (item != null)) {
+            if (prepend)
+                list.getItems().add(0, item);
+            else
+                list.getItems().add(item);
+            item.setList(list);
+        }
+        return list;
+    }
+
+    private Optional<Item> doGetItemFromList(ItemsList list, String itemId) {
+        return list.getItems().stream().filter(item -> item.getId().equals(itemId)).findFirst();
+    }
+
+    private ItemsList doDeleteItemFromList(ItemsList list, String itemId) {
+        list.setItems(list.getItems().stream().filter(item -> !(item.getId().equals(itemId))).collect(Collectors.toList()));
+        return list;
+    }
 }

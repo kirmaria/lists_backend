@@ -7,6 +7,7 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.thekirschners.lists.utils.UserPrincipal;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,6 +26,7 @@ import java.util.*;
 import static java.util.Arrays.asList;
 
 @EnableWebSecurity
+@Profile("!test")
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     public static final String JWK_URL = "https://dev-pjs46xuy.eu.auth0.com";
@@ -58,6 +60,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 
     @Bean
+    @Profile("!test")
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
@@ -71,14 +74,14 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
+    @Profile("!test")
     JwtDecoder jwtDecoder() {
         return token -> {
             DecodedJWT jwt = JWT.decode(token);
             JwkProvider provider = new UrlJwkProvider(JWK_URL);
             try {
                 Jwk jwk = provider.get(jwt.getKeyId());
-                Algorithm algorithm = null;
-                algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
+                Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
                 algorithm.verify(jwt);
             } catch (JwkException e) {
                 throw new IllegalStateException(e);

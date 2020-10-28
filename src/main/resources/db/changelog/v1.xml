@@ -10,7 +10,7 @@
     <changeSet id="1" author="maria">
 
         <!-- user table -->
-        <createTable tableName="user">
+        <createTable tableName="users">
             <column name="id" type="varchar(64)">
                 <constraints primaryKey="true" primaryKeyName="user_pk" nullable="false"/>
             </column>
@@ -21,10 +21,10 @@
             <column name="language" type="varchar(3)"></column>
             <column name="enabled" type="boolean" defaultValue="false"></column>
         </createTable>
-        <createIndex tableName="user" indexName="user_subject_ndx" unique="true">
+        <createIndex tableName="users" indexName="user_subject_ndx" unique="true">
             <column name="subject"></column>
         </createIndex>
-        <createIndex tableName="user" indexName="user_nick_name_ndx" unique="true">
+        <createIndex tableName="users" indexName="user_nick_name_ndx" unique="true">
             <column name="nick_name"></column>
         </createIndex>
 
