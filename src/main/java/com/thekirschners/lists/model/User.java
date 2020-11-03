@@ -14,11 +14,11 @@ import javax.validation.constraints.NotNull;
 public class User extends IdentifierBase {
 
     @NotNull
-    @Column(name = "subject")
+    @Column(name = "subject", unique = true)
     String subject;
 
     @NotNull
-    @Column(name = "nick_name")
+    @Column(name = "nick_name", unique = true)
     String nickName;
 
     @NotNull

@@ -64,7 +64,15 @@
         <createIndex tableName="item" indexName="item_list_id_ndx">
             <column name="list_id"></column>
         </createIndex>
-
-
     </changeSet>
+
+
+
+    <changeSet id="2" author="maria">
+        <createIndex tableName="list" indexName="list_owner_name_ndx" >
+            <column name="owner"></column>
+            <column name="name"></column>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

@@ -4,7 +4,7 @@ import java.security.Principal;
 
 public class UserPrincipal implements Principal {
     private final String subject;
-    private final String nickName ;
+    private final String nickName;
     private final String email;
 
     public UserPrincipal(String subject, String nickName, String email) {

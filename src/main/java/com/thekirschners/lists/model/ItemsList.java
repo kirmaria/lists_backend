@@ -1,15 +1,12 @@
 package com.thekirschners.lists.model;
 
-import com.thekirschners.lists.dto.ItemDTO;
 import com.thekirschners.lists.dto.ItemsListDTO;
 import com.thekirschners.lists.dto.ItemsListValuesDTO;
 import com.thekirschners.lists.utils.ItemsListEntityListener;
 import com.thekirschners.lists.utils.StringListConverter;
-import jdk.jfr.Timestamp;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.validator.constraints.UniqueElements;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -21,16 +18,20 @@ import java.util.List;
 @Entity
 @Table(name = "list")
 @EntityListeners(ItemsListEntityListener.class)
-@FilterDef(name = ItemsList.FILTER_NAME_USER, parameters = {@ParamDef(name = ItemsList.FILTER_PARAM_NAME_USER, type = "string")})
+@FilterDef(name = ItemsList.FILTER_NAME_USER, parameters = {
+        @ParamDef(name = ItemsList.FILTER_PARAM_NAME_OWNER, type = "string"),
+        @ParamDef(name = ItemsList.FILTER_PARAM_NAME_INVITES, type = "string")
+})
 @Filter(name = ItemsList.FILTER_NAME_USER, condition = ItemsList.USER_FILTER_CLAUSE)
 
 public class ItemsList extends IdentifierBase {
     public static final String FILTER_NAME_USER = "USER_FILTER";
-    public static final String FILTER_PARAM_NAME_USER = "USER_PARAM";
-    public static final String USER_FILTER_CLAUSE = "(owner = :" + FILTER_PARAM_NAME_USER + ")";
+    public static final String FILTER_PARAM_NAME_OWNER = "OWNER_PARAM";
+    public static final String FILTER_PARAM_NAME_INVITES= "INVITES_PARAM";
+    public static final String USER_FILTER_CLAUSE = "(owner = :" + FILTER_PARAM_NAME_OWNER + " or invites like :" + FILTER_PARAM_NAME_INVITES + ")";
 
     @NotNull
-    @Column(name = "name", nullable = false, length = 64)
+    @Column(name = "name", nullable = false, length = 64, unique=true)
     String name;
 
     @Column(name = "description", length = 256)
@@ -109,14 +110,6 @@ public class ItemsList extends IdentifierBase {
         return this;
     }
 
-    public String getOwner() {
-        return this.owner;
-    }
-
-    public ItemsList setOwner(String owner) {
-        this.owner = owner;
-        return this;
-    }
 
     public long getCreationTimestamp() {
         return this.creationTimestamp;
@@ -127,14 +120,6 @@ public class ItemsList extends IdentifierBase {
         return this;
     }
 
-    public List<String> getInvites() {
-        return this.invites;
-    }
-
-    public ItemsList setInvites(List<String> invites) {
-        this.invites = invites;
-        return this;
-    }
 
     public long getUpdateTimestamp() {
         return this.updateTimestamp;
@@ -153,6 +138,38 @@ public class ItemsList extends IdentifierBase {
         this.items = items;
         return this;
     }
+
+    public String getOwner() {
+        return this.owner;
+    }
+
+    public ItemsList setOwner(String owner) {
+        this.owner = owner;
+        return this;
+    }
+
+    public List<String> getInvites() {
+        return this.invites;
+    }
+
+    public ItemsList setInvites(List<String> invites) {
+        this.invites = invites;
+        return this;
+    }
+
+    public ItemsList addInvite(String invite) {
+        if (this.invites.contains(invite))
+            this.invites.add(invite);
+        return this;
+    }
+
+    public ItemsList removeInvite(List<String> invite) {
+        if (this.invites.contains(invite)) {
+            this.invites.remove(invite);
+        }
+        return this;
+    }
+
 
     /* DTO */
     public ItemsList updateFromValuesDTO(ItemsListValuesDTO value) {
@@ -179,7 +196,6 @@ public class ItemsList extends IdentifierBase {
         dto.setId(id);
         dto.setValue(getValuesDTO());
 
-        dto.setOwner(owner);
         dto.setInvites(invites);
 
         dto.getItems().clear();

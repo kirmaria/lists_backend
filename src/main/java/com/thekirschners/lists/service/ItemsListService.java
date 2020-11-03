@@ -9,7 +9,10 @@ import com.thekirschners.lists.model.ItemsList;
 import com.thekirschners.lists.model.Tuple;
 import com.thekirschners.lists.repository.ItemRepository;
 import com.thekirschners.lists.repository.ItemsListRepository;
+import com.thekirschners.lists.utils.UserPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -30,51 +33,83 @@ public class ItemsListService {
     @Autowired
     UserService userService;
 
+
+    /**
+     * create a new list
+     * @param {@link ItemsListValuesDTO} value The new list data
+     * @return {@link ItemsListDTO} the new list DTO
+     * @throws {@link IllegalArgumentException} if a list with the same name (and same owner) already exists
+     */
     public ItemsListDTO createList(ItemsListValuesDTO value) {
+
+        // !!!!!!!!!!!!!! first, create the owner's list if he does not exist
         userService.createUserIfNotExist();
 
-        return itemsListRepository.save(new ItemsList().updateFromValuesDTO(value)).getDTO();
+
+        // if a list with the same name and same owner exist throws IllegalArgumentException
+        if (itemsListRepository.existsByNameAndOwner(value.getName(), getCurrentUserSubject())){
+            throw new IllegalArgumentException("Cannot create a new list named \"" + value.getName() + "\". \nAnother list named \"" + value.getName() + "\" already exists.");
+        }
+        else {
+            // everything Ok -> create the new list and return list DTO
+            return itemsListRepository.save(new ItemsList().updateFromValuesDTO(value)).getDTO();
+        }
     }
 
 
+    /**
+     * duplicate a list identified by  @param {String} listId and do what ...
+     * @param {String} listId The id of source list
+     * @param {@link ItemsListValuesDTO} value The data values of the new duplicated list
+     * @return {@link ItemsListDTO} the new duplicated list DTO
+     * @throws {@link IllegalArgumentException} if a list with the same name and same owner already exists
+     * @throws {@link NoSuchElementException} if the source list does not exist
+     */
     public ItemsListDTO duplicateList(String listId, ItemsListValuesDTO value) {
-        return itemsListRepository.findById(listId)
-                .map(itemsList -> {
-                    ItemsList newList = itemsListRepository.save(new ItemsList().updateFromValuesDTO(itemsList.getValuesDTO()));
-                    newList.updateFromValuesDTO(value);
-                    for (Item item : itemsList.getItems()) {
-                        Item newItem = new Item();
-                        newItem.updateFromValuesDTO(item.getDTO().getValue());
-                        newList.getItems().add(itemRepository.save(newItem).setList(newList));
-                    }
-                    return itemsListRepository.save(newList).getDTO();
-                })
-                .orElseThrow(() -> new NoSuchElementException("ERROR duplicateList: itemsList <" + listId + ">!"));
+
+        // if the duplicated list name already exist for the same owner throws IllegalArgumentException
+        if (itemsListRepository.existsByNameAndOwner(value.getName(), getCurrentUserSubject())) {
+            throw new IllegalArgumentException("Must change the duplicated list name. Cannot create 2 lists with the same name: \"" + value.getName() + "\".");
+        }
+        else {
+            return itemsListRepository.findById(listId)
+                    // if the source list exist
+                    .map(itemsList -> {
+                        // create a new list with a values DTO
+                        ItemsList newList = itemsListRepository.save(new ItemsList().updateFromValuesDTO(value));
+
+                        // duplicate all the items from source list to the new list
+                        for (Item item : itemsList.getItems()) {
+                            Item newItem = new Item().updateFromValuesDTO(item.getDTO().getValue());
+                            newList.getItems().add(itemRepository.save(newItem).setList(newList));
+                        }
+                        return itemsListRepository.save(newList).getDTO();
+                    })
+                    // if the source list does not exist throws NoSuchElementException
+                    .orElseThrow(() -> new NoSuchElementException("List to duplicate does not exist."));
+        }
+
     }
 
-    public ItemsListDTO updateListValues(ItemsListValuesDTO value, String listId) {
+    public ItemsListDTO updateListValues(String listId, ItemsListValuesDTO value) {
         return itemsListRepository.findById(listId)
                 .map(itemsList -> itemsList.updateFromValuesDTO(value))
                 .map(itemsList -> itemsListRepository.save(itemsList))
                 .map(itemsList -> itemsList.getDTO())
-                .orElseThrow(() -> new NoSuchElementException("ERROR updateValuesList: itemsList <" + listId + "> not found!"));
+                .orElseThrow(() -> new NoSuchElementException("List to update does not exist"));
     }
 
-    public ItemsListDTO updateListName(String listId, String name) {
-        return itemsListRepository.findById(listId)
-                .map(itemsList -> itemsList.setName(name))
-                .map(itemsList -> itemsListRepository.save(itemsList))
-                .map(itemsList -> itemsList.getDTO())
-                .orElseThrow(() -> new NoSuchElementException("updateListName: itemsList <" + listId + "> not found!"));
-    }
 
     public ItemsListDTO getList(String listId) {
         return itemsListRepository.findById(listId)
                 .map(itemsList -> itemsList.getDTO())
-                .orElseThrow(() -> new NoSuchElementException("getList: itemsList <" + listId + "> not found!"));
+                .orElseThrow(() -> new NoSuchElementException("Demanded list does not exist."));
     }
 
     public List<ItemsListDTO> getAllLists() {
+        //
+        userService.createUserIfNotExist();
+
         List<ItemsListDTO> listsDTO = new ArrayList<>();
         ListIterator<ItemsList> it = itemsListRepository.findAll().listIterator();
         while (it.hasNext()) {
@@ -90,16 +125,16 @@ public class ItemsListService {
         return itemsListRepository.findById(listId)
                 .map(itemsList -> doAddItemToList(itemsList, itemRepository.save(new Item().updateFromValuesDTO(itemValue).setList(itemsList)), prepend))
                 .map(itemsList -> itemsListRepository.save(itemsList).getDTO())
-                .orElseThrow(() -> new NoSuchElementException("addItemToList: itemsList <" + listId + "> not found!"));
+                .orElseThrow(() -> new NoSuchElementException("Cannot add an item to a list that does not exist."));
     }
 
 
-    public ItemsListDTO updateItemValues(ItemValuesDTO value, String itemId) {
+    public ItemsListDTO updateItemValues(String itemId, ItemValuesDTO value) {
         return itemRepository.findById(itemId)
                 .map(item -> item.updateFromValuesDTO(value))
                 .map(item -> itemRepository.save(item))
                 .map(item -> item.getList().getDTO())
-                .orElseThrow(() -> new NoSuchElementException("updateValuesItem: item <" + itemId + "> not found!"));
+                .orElseThrow(() -> new NoSuchElementException("Item to update does not exist."));
     }
 
 
@@ -181,6 +216,21 @@ public class ItemsListService {
 
 
     /* PRIVATE */
+    private String getCurrentUserSubject() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof UserPrincipal) {
+                return ((UserPrincipal) principal).getSubject();
+            } else {
+                return "anonymousUser";
+            }
+        } else {
+            return "anonymousUser";
+        }
+    }
+
+
     private ItemsList doAddItemToList(ItemsList list, Item item, boolean prepend) {
         if ((list != null) && (item != null)) {
             if (prepend)

@@ -58,7 +58,7 @@ public class ItemsListServiceTest {
     public void testUpdateItemsListValue() {
         assertThat(listDTO_1.getId()).isNotNull();
 
-        listDTO_1 = service.updateListValues(new ItemsListValuesDTO("list_1_updated", "list_1_descr_updated", ListType.CHECKING_LIST), listDTO_1.getId());
+        listDTO_1 = service.updateListValues(listDTO_1.getId(), new ItemsListValuesDTO("list_1_updated", "list_1_descr_updated", ListType.CHECKING_LIST));
 
         assertThat(listDTO_1.getValue().getName()).isEqualTo("list_1_updated");
         assertThat(listDTO_1.getValue().getDescription()).isEqualTo("list_1_descr_updated");

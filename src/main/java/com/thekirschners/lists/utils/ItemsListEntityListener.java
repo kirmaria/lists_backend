@@ -20,7 +20,7 @@ public class ItemsListEntityListener {
                 UserPrincipal userPrincipal = (UserPrincipal) principal;
                 itemsList.setOwner(userPrincipal.getSubject());
             } else {
-                itemsList.setOwner("anonymous");
+                itemsList.setOwner("anonymousUser");
                 LOGGER.warn("setOwner / wrong kind of principal {}", principal.getClass().getName());
             }
         } else {

@@ -9,12 +9,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.security.PermitAll;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+
+/**
+ * implements the API for managing lists
+ * <p>any exception that bubbles out will be handled by {@link com.thekirschners.lists.utils.RestErrorHandler}
+ */
 @RestController
 public class ItemsListController {
 
@@ -29,63 +30,65 @@ public class ItemsListController {
     @Autowired
     ItemsListService service;
 
+
+    /**
+     * create or duplicate a list: if listId parameter is null, a new list will be created;
+     * if listId parameter is not null the list identified by listId will be duplicated
+     * @param value list data
+     * @param listId id of the list to be duplicated (nullable)
+     * @return a {@link ResponseEntity} wrapping the new list DTO
+     */
     @PostMapping(path = API_ITEMS_LIST, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ItemsListDTO> createList(@RequestBody ItemsListValuesDTO value, @RequestParam(name="listId", required = false, defaultValue = "") String listId) {
-        try {
-            if (Strings.isBlank(listId))
-                listDTO = service.createList(value);
-            else
-                listDTO = service.duplicateList(listId, value);
-
-            return ResponseEntity.ok(listDTO);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        if (Strings.isBlank(listId))
+            listDTO = service.createList(value);
+        else
+            listDTO = service.duplicateList(listId, value);
+        return ResponseEntity.ok(listDTO);
     }
 
 
+    /**
+     * update the data of a list
+     * @param value  list new data
+     * @param listId id of the list to be duplicated (not null)
+     * @return a {@link ResponseEntity} wrapping the updated list DTO
+     */
     @PutMapping(path = API_ITEMS_LIST+"/{listId}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ItemsListDTO> updateListValues(@RequestBody ItemsListValuesDTO value, @PathVariable("listId") String listId) {
-        try {
-            listDTO = service.updateListValues(value, listId);
-            return ResponseEntity.ok(listDTO);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @PatchMapping(path = API_ITEMS_LIST+"/{listId}/name", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ItemsListDTO> updateListName(@RequestBody StringDTO nameDTO, @PathVariable("listId") String listId) {
-        try {
-            listDTO = service.updateListName(listId, nameDTO.getValue());
-            return ResponseEntity.ok(listDTO);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        listDTO = service.updateListValues(listId, value);
+        return ResponseEntity.ok(listDTO);
     }
 
 
+    /**
+     * delete a list
+     * @param listId id of the list to be deleted (not null)
+     * @return a {@link ResponseEntity} wrapping the updated list DTO
+     */
     @DeleteMapping(path = API_ITEMS_LIST+"/{listId}")
     public ResponseEntity<EmptyDTO> deleteList(@PathVariable("listId") String listId) {
-        try {
-            service.deleteList(listId);
-            return ResponseEntity.ok(new EmptyDTO());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        service.deleteList(listId);
+        return ResponseEntity.ok(new EmptyDTO());
     }
 
 
+    /**
+     * get a list
+     * @param listId id of the list to be obteined (not null)
+     * @return a {@link ResponseEntity} wrapping the obteined list DTO
+     */
     @GetMapping(path = API_ITEMS_LIST+"/{listId}")
     public ResponseEntity<ItemsListDTO> getList(@PathVariable("listId") String listId) {
-        try {
-            listDTO = service.getList(listId);
-            return ResponseEntity.ok(listDTO);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        listDTO = service.getList(listId);
+        return ResponseEntity.ok(listDTO);
     }
 
+
+    /**
+     * get all the lists owned or shared by the current user
+     * @return a {@link ResponseEntity} wrapping the obteined list DTO
+     */
     @GetMapping(path = API_ITEMS_LIST)
     public ResponseEntity<List<ItemsListDTO>> getAllLists() {
         try {
@@ -96,12 +99,19 @@ public class ItemsListController {
         }
     }
 
+    /**
+     * add an item to a list
+     * @param value item data (not null)
+     * @param listId id of the list to be updated (not null)
+     * @param prepend (optional) boolean indicating if the item must be added at the first position in the list (true), or at the last position (false). If omitted, prepend = false.
+     * @return a {@link ResponseEntity} wrapping the updated list DTO
+     */
     @PostMapping(path = API_ITEMS_LIST+"/{listId}/items", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ItemsListDTO> addItemToList(@RequestBody ItemValuesDTO itemValuesDTO,
+    public ResponseEntity<ItemsListDTO> addItemToList(@RequestBody ItemValuesDTO value,
                                                       @PathVariable("listId") String listId,
                                                       @RequestParam(name="prepend", required = false, defaultValue = "false") boolean prepend) {
         try {
-            listDTO = service.addItemToList(itemValuesDTO, listId, prepend);
+            listDTO = service.addItemToList(value, listId, prepend);
             return ResponseEntity.ok(listDTO);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -114,7 +124,7 @@ public class ItemsListController {
     @PutMapping(path = API_ITEM+"/{itemId}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ItemsListDTO> updateItemValues(@RequestBody ItemValuesDTO value, @PathVariable("itemId") String itemId) {
         try {
-            listDTO = service.updateItemValues(value, itemId);
+            listDTO = service.updateItemValues(itemId, value);
             return ResponseEntity.ok(listDTO);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
