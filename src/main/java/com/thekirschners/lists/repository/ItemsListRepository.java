@@ -5,7 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 
 public interface ItemsListRepository extends JpaRepository<ItemsList, String> {
-
-    boolean existsByName(String name);
     boolean existsByNameAndOwner(String name, String owner);
 }

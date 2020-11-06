@@ -15,7 +15,7 @@ import javax.persistence.PersistenceContext;
 
 
 @Aspect
-@Component
+ @Component
 @Profile("!test")
 public class UserFilterApplier {
     @PersistenceContext
@@ -24,8 +24,8 @@ public class UserFilterApplier {
     @Before("execution(public * com.thekirschners.lists.service.ItemsListService.*(..))")
     public void aroundUserServices() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if ((authentication != null) && !(authentication instanceof AnonymousAuthenticationToken)) {
-        //if (authentication != null && !"anonymousUser".equals(authentication.getPrincipal())) {
             org.hibernate.Filter filter = entityManager.unwrap(Session.class).enableFilter(ItemsList.FILTER_NAME_USER);
             Object principal = authentication.getPrincipal();
             filter.setParameter(ItemsList.FILTER_PARAM_NAME_OWNER, ((UserPrincipal) principal).getSubject());

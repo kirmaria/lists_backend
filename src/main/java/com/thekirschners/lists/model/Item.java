@@ -1,8 +1,5 @@
 package com.thekirschners.lists.model;
 
-import com.thekirschners.lists.dto.ItemDTO;
-import com.thekirschners.lists.dto.ItemValuesDTO;
-
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
@@ -34,11 +31,16 @@ public class Item extends IdentifierBase  {
     @JoinColumn(name = "list_id", nullable = false)
     ItemsList list;
 
+    @Column(name="list_id", insertable = false, updatable = false)
+    String listId;
+
+
     public Item() {
     }
 
     public Item(ItemsList list, @NotNull String label, String description, @NotNull UnitType unit, int qty, boolean checked ) {
         this.list = list;
+        this.listId = list.getId();
         this.label = label;
         this.description = description;
         this.unit = unit;
@@ -92,43 +94,8 @@ public class Item extends IdentifierBase  {
 
     public Item setList(ItemsList list) {
         this.list = list;
+        this.listId = list.getId();
         return this;
-    }
-
-    /* DTO */
-    public Item updateFromValuesDTO(ItemValuesDTO value) {
-        this.setLabel(value.getLabel());
-        this.setDescription(value.getDescription());
-        this.setUnit(value.getUnit());
-        this.setQty(value.getQty());
-        this.setChecked(value.isChecked());
-        return this;
-    }
-
-    public Item updateFromDTO(ItemDTO dto) {
-        this.setLabel(dto.getValue().getLabel());
-        this.setDescription(dto.getValue().getDescription());
-        this.setUnit(dto.getValue().getUnit());
-        this.setQty(dto.getValue().getQty());
-        this.setChecked(dto.getValue().isChecked());
-        return this;
-    }
-
-    public ItemValuesDTO getValuesDTO() {
-        ItemValuesDTO value = new ItemValuesDTO();
-        value.setLabel(label);
-        value.setDescription(description);
-        value.setUnit(unit);
-        value.setQty(qty);
-        value.setChecked(checked);
-        return value;
-    }
-
-    public ItemDTO getDTO() {
-        ItemDTO dto = new ItemDTO();
-        dto.setId(id);
-        dto.setValue(getValuesDTO());
-        return dto;
     }
 
 }

@@ -1,7 +1,6 @@
 package com.thekirschners.lists.model;
 
-import com.thekirschners.lists.dto.ItemsListDTO;
-import com.thekirschners.lists.dto.ItemsListValuesDTO;
+
 import com.thekirschners.lists.utils.ItemsListEntityListener;
 import com.thekirschners.lists.utils.StringListConverter;
 import org.hibernate.annotations.Filter;
@@ -31,7 +30,7 @@ public class ItemsList extends IdentifierBase {
     public static final String USER_FILTER_CLAUSE = "(owner = :" + FILTER_PARAM_NAME_OWNER + " or invites like :" + FILTER_PARAM_NAME_INVITES + ")";
 
     @NotNull
-    @Column(name = "name", nullable = false, length = 64, unique=true)
+    @Column(name = "name", nullable = false, length = 64)
     String name;
 
     @Column(name = "description", length = 256)
@@ -168,42 +167,6 @@ public class ItemsList extends IdentifierBase {
             this.invites.remove(invite);
         }
         return this;
-    }
-
-
-    /* DTO */
-    public ItemsList updateFromValuesDTO(ItemsListValuesDTO value) {
-        this.setName(value.getName());
-        this.setDescription(value.getDescription());
-        this.setType(value.getType());
-        this.setCreationTimestamp(Instant.now().toEpochMilli());
-        this.setUpdateTimestamp(Instant.now().toEpochMilli());
-        return this;
-    }
-
-
-    public ItemsListValuesDTO getValuesDTO() {
-        ItemsListValuesDTO value = new ItemsListValuesDTO();
-        value.setName(name);
-        value.setDescription(description);
-        value.setType(type);
-        return value;
-    }
-
-    public ItemsListDTO getDTO() {
-        ItemsListDTO dto = new ItemsListDTO();
-
-        dto.setId(id);
-        dto.setValue(getValuesDTO());
-
-        dto.setInvites(invites);
-
-        dto.getItems().clear();
-        for (Item item : items) {
-            dto.getItems().add(item.getDTO());
-        }
-
-        return dto;
     }
 
 }

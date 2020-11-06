@@ -22,4 +22,9 @@ public class RestErrorHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<ApiErrorDTO> noSuchElementToNotFound(RuntimeException ex, WebRequest request) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiErrorDTO(ex.getLocalizedMessage()));
     }
+
+    @ExceptionHandler(value = { Exception.class })
+    protected ResponseEntity<ApiErrorDTO> exception(RuntimeException ex, WebRequest request) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiErrorDTO(ex.getLocalizedMessage()));
+    }
 }

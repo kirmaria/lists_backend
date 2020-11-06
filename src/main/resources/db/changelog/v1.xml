@@ -75,4 +75,11 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="3" author="maria">
+        <createIndex tableName="item" indexName="item_list_id_label_ndx" >
+            <column name="list_id"></column>
+            <column name="label"></column>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

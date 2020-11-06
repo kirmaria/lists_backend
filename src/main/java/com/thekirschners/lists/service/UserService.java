@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -87,6 +88,18 @@ public class UserService {
     }
 
 
+    public String getNicknameForSubject(String subject) {
+        return this.userRepository.findBySubject(subject)
+                .map(user -> user.getNickName())
+                .orElseThrow(() -> new NoSuchElementException("Unable to find user for subject <" + subject + "> "));
+    }
+
+    public List<String> getNicknamesForSubjects(List<String> subjectsList) {
+        return this.userRepository.findAllNicknamesBySubjectIn(subjectsList);
+    }
+
+
+    /* PRIVATE */
     private <R> R doWithPrincipal(Function<UserPrincipal, R> consumer) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null) {

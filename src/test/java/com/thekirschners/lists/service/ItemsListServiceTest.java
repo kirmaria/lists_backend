@@ -70,7 +70,7 @@ public class ItemsListServiceTest {
     public void testAddItemToList() {
 
         // add first item to list_1
-        listDTO_1 = service.addItemToList(new ItemValuesDTO("item_1", "item_descr_1", UnitType.l, 2, false), listDTO_1.getId(), false);
+        listDTO_1 = service.addNewItemToList(new ItemValuesDTO("item_1", "item_descr_1", UnitType.l, 2, false), listDTO_1.getId(), false);
         assertThat(listDTO_1.getItems()).hasSize(1);
         ItemDTO itemDTO = listDTO_1.getItems().get(0);
         itemId_1_1 = itemDTO.getId();
@@ -82,7 +82,7 @@ public class ItemsListServiceTest {
         assertThat(!itemDTO.getValue().isChecked());
 
         //prepend second item to list_1
-        listDTO_1 = service.addItemToList(new ItemValuesDTO("item_2", "item_descr_2", UnitType.m, 5, true), listDTO_1.getId(), true);
+        listDTO_1 = service.addNewItemToList(new ItemValuesDTO("item_2", "item_descr_2", UnitType.m, 5, true), listDTO_1.getId(), true);
         assertThat(listDTO_1.getItems()).hasSize(2);
         itemDTO = listDTO_1.getItems().get(0); // <itemId_1_2> is the first item in list
         itemId_1_2 = itemDTO.getId();

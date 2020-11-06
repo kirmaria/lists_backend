@@ -3,6 +3,9 @@ package com.thekirschners.lists.utils;
 import java.security.Principal;
 
 public class UserPrincipal implements Principal {
+
+    public static final String ANONYMOUS_USER = "anonymousUser";
+
     private final String subject;
     private final String nickName;
     private final String email;
