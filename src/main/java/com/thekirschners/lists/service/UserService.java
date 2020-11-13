@@ -16,7 +16,6 @@ import javax.transaction.Transactional;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 @Service
@@ -96,6 +95,17 @@ public class UserService {
 
     public List<String> getNicknamesForSubjects(List<String> subjectsList) {
         return this.userRepository.findAllNicknamesBySubjectIn(subjectsList);
+    }
+
+
+    public String getSubjectForNickname(String nickname) {
+        return this.userRepository.findByNickName(nickname)
+                .map(user -> user.getSubject())
+                .orElseThrow(() -> new NoSuchElementException("Unable to find user for nickname <" + nickname + "> "));
+    }
+
+    public List<String> getSubjectsForNicknameLike(String nicknameLike) {
+         return this.userRepository.findAllSubjectsByNicknameLike(nicknameLike);
     }
 
 

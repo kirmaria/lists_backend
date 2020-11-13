@@ -1,5 +1,6 @@
 package com.thekirschners.lists.service;
 
+import com.google.common.base.Preconditions;
 import com.thekirschners.lists.dto.ItemDTO;
 import com.thekirschners.lists.dto.ItemValuesDTO;
 import com.thekirschners.lists.dto.ItemsListDTO;
@@ -9,6 +10,7 @@ import com.thekirschners.lists.model.ItemsList;
 import com.thekirschners.lists.repository.ItemRepository;
 import com.thekirschners.lists.repository.ItemsListRepository;
 import com.thekirschners.lists.utils.UserPrincipal;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,11 +37,14 @@ public class ItemsListService {
 
     /**
      * create a new list
+     *
      * @param {@link ItemsListValuesDTO} value The new list data
      * @return {@link ItemsListDTO} The new list DTO
      * @throws {@link IllegalArgumentException} if a list with the same name (and same owner) already exists
      */
     public ItemsListDTO createList(ItemsListValuesDTO value) {
+
+        Preconditions.checkArgument(!Strings.isBlank(value.getName()), "List name cannot be empty.");
 
         // !!!!!!!!!!!!!! first, create the owner's list user if does not exist
         userService.createUserIfNotExist();
@@ -58,6 +63,7 @@ public class ItemsListService {
 
     /**
      * duplicate a list
+     *
      * @param {String} listId The id of source list
      * @param {@link ItemsListValuesDTO} value The data values of the new duplicated list
      * @return {@link ItemsListDTO} The new duplicated list DTO
@@ -65,6 +71,9 @@ public class ItemsListService {
      * @throws {@link NoSuchElementException} if the source list does not exist
      */
     public ItemsListDTO duplicateList(String listId, ItemsListValuesDTO value) {
+
+        Preconditions.checkArgument(!Strings.isBlank(listId), "List id cannot be empty.");
+        Preconditions.checkArgument(!Strings.isBlank(value.getName()), "List name cannot be empty.");
 
         // if the duplicated list name already exist for the same owner throws IllegalArgumentException
         if (itemsListRepository.existsByNameAndOwner(value.getName(), getCurrentUserSubject())) {
@@ -92,6 +101,7 @@ public class ItemsListService {
 
     /**
      * update a list values
+     *
      * @param {String} listId The id the list to be updated
      * @param {@link ItemsListValuesDTO} value The new data values
      * @return {@link ItemsListDTO} the updated list DTO
@@ -99,6 +109,10 @@ public class ItemsListService {
      * @throws {@link NoSuchElementException} if the source list does not exist
      */
     public ItemsListDTO updateListValues(String listId, ItemsListValuesDTO value) {
+
+        Preconditions.checkArgument(!Strings.isBlank(listId), "List id cannot be empty.");
+        Preconditions.checkArgument(!Strings.isBlank(value.getName()), "List name cannot be empty.");
+
         // if the duplicated list name already exist for the same owner throws IllegalArgumentException
         if (itemsListRepository.existsByNameAndOwner(value.getName(), getCurrentUserSubject())) {
             throw new IllegalArgumentException("Cannot update list name to \"" + value.getName() + "\". \nAnother list named \"" + value.getName() + "\" already exists.");
@@ -114,11 +128,15 @@ public class ItemsListService {
 
     /**
      * get a list. The user must be owner or invitee on the list.
+     *
      * @param {String} listId The id the list to be retrieved
      * @return {@link ItemsListDTO} the found list DTO
      * @throws {@link NoSuchElementException} if the list does not exist
      */
     public ItemsListDTO getList(String listId) {
+
+        Preconditions.checkArgument(!Strings.isBlank(listId), "List id cannot be empty.");
+
         return itemsListRepository.findById(listId)
                 .map(itemsList -> this.getListDTOFromListEntity(itemsList))
                 .orElseThrow(() -> new NoSuchElementException("The search list does not exist."));
@@ -127,22 +145,31 @@ public class ItemsListService {
 
     /**
      * get all the lists owned by the user and all the lists where the user is an invitee
-     * @return {@link List<ItemsListDTO>} the list of all founded list DTO
+     * @return {@link List<ItemsListDTO>} All the lists owned by the user and all the lists where the user is an invitee
      */
     public List<ItemsListDTO> getAllLists() {
 
         // !!!!!!!!!!!!!! first, create the owner's list user if does not exist
         userService.createUserIfNotExist();
 
-        List<ItemsListDTO> listsDTO = new ArrayList<>();
-        ListIterator<ItemsList> it = itemsListRepository.findAll().listIterator();
-        while (it.hasNext()) {
-            ItemsList list = it.next();
-            listsDTO.add(this.getListDTOFromListEntity(list));
-        }
-        return listsDTO;
+        return getListsDTOFromLists(itemsListRepository.findAll().listIterator());
     }
 
+    /**
+     * get all the lists for which the name contains 'searchTerm'
+     *
+     * @param {String} searchTerm The pattern to be matched
+     * @return {@link List<ItemsListDTO>} All the matched lists
+     */
+    public List<ItemsListDTO> getAllListsWithListNamePattern(String searchTerm) {
+
+        Preconditions.checkArgument(!Strings.isBlank(searchTerm), "Search term cannot be empty.");
+
+        // !!!!!!!!!!!!!! first, create the owner's list user if does not exist
+        userService.createUserIfNotExist();
+
+        return getListsDTOFromLists(itemsListRepository.findAllByNameIsLike("%" + searchTerm + "%").listIterator());
+    }
 
 
 
@@ -150,19 +177,23 @@ public class ItemsListService {
 
     /**
      * add a new item to a list
-     * @param {@link ItemValuesDTO} value The value of the new item
-     * @param {String} listId The id of the list where the new item will be added
+     *
+     * @param {@link    ItemValuesDTO} value The value of the new item
+     * @param {String}  listId The id of the list where the new item will be added
      * @param {boolean} prepend Specify if the new item is insert in the first or last position in list
      * @return {@link ItemsListDTO} The updated list DTO
      * @throws {@link IllegalArgumentException} if an item with the same label already exists in list
      * @throws {@link NoSuchElementException} if the list does not exist
      */
     public ItemsListDTO addNewItemToList(ItemValuesDTO value, String listId, boolean prepend) {
+
+        Preconditions.checkArgument(!Strings.isBlank(value.getLabel()), "Item label cannot be empty.");
+        Preconditions.checkArgument(!Strings.isBlank(listId), "List id cannot be empty.");
+
         // if the new item label already exist in the list throws IllegalArgumentException
         if (itemRepository.existsByLabelAndListId(value.getLabel(), listId)) {
             throw new IllegalArgumentException("Cannot create an item with the label \"" + value.getLabel() + "\". \nAnother item  labelled \"" + value.getLabel() + "\" already exists in this list.");
-        }
-        else {
+        } else {
             return itemsListRepository.findById(listId)
                     .map(itemsList -> doAddItemToList(itemsList, itemRepository.save(this.updateItemEntityFromItemValuesDTO(new Item(), value).setList(itemsList)), prepend))
                     .map(itemsList -> this.getListDTOFromListEntity(itemsListRepository.save(itemsList)))
@@ -173,6 +204,7 @@ public class ItemsListService {
 
     /**
      * update the values of an item
+     *
      * @param {String} itemId The id of the item to be updated
      * @param {@link ItemValuesDTO} value The value to be updated
      * @return {@link ItemsListDTO} The updated list DTO
@@ -181,15 +213,17 @@ public class ItemsListService {
      */
     public ItemsListDTO updateItemValues(String itemId, ItemValuesDTO value) {
 
+        Preconditions.checkArgument(!Strings.isBlank(itemId), "Item id cannot be empty.");
+        Preconditions.checkArgument(!Strings.isBlank(value.getLabel()), "Item label cannot be empty.");
+
         return itemRepository.findById(itemId)
                 .map(item -> {
                     if (!this.getItemValuesDTOFromItemEntity(item).getLabel().equals(value.getLabel())) {
                         throw new IllegalArgumentException("Cannot change the item from label '" + this.getItemValuesDTOFromItemEntity(item).getLabel() + "' to label '" + value.getLabel() + "'. Another item labelled '" + value.getLabel() + "' already exists in this list.");
-                    }
-                    else {
+                    } else {
                         return item;
                     }
-                 })
+                })
                 .map(item -> this.updateItemEntityFromItemValuesDTO(item, value))
                 .map(item -> itemRepository.save(item))
                 .map(item -> this.getListDTOFromListEntity(item.getList()))
@@ -199,12 +233,17 @@ public class ItemsListService {
 
     /**
      * get an item from a list
+     *
      * @param {String} itemId The id of the item to be retrieved
      * @param {String} listId The id of the list where the item is present
      * @return {@link ItemDTO} The item DTO
      * @throws {@link NoSuchElementException} if the item or the list does not exist
      */
     public ItemDTO getItemFromList(String itemId, String listId) {
+
+        Preconditions.checkArgument(!Strings.isBlank(itemId), "Item id cannot be empty.");
+        Preconditions.checkArgument(!Strings.isBlank(listId), "List id cannot be empty.");
+
         return itemsListRepository.findById(listId)
                 .flatMap(itemsList -> doGetItemFromList(itemsList, itemId))
                 .map(item -> this.getItemDTOFromItemEntity(item))
@@ -214,11 +253,14 @@ public class ItemsListService {
 
     /**
      * get an item
+     *
      * @param {String} itemId The id of the item to be retrieved
      * @return {@link ItemDTO} The item DTO
      * @throws {@link NoSuchElementException} if the item does not exist
      */
     public ItemDTO getItem(String itemId) {
+        Preconditions.checkArgument(!Strings.isBlank(itemId), "Item id cannot be empty.");
+
         return itemRepository.findById(itemId)
                 .map(item -> this.getItemDTOFromItemEntity(item))
                 .orElseThrow(() -> new NoSuchElementException("The item does not exist."));
@@ -227,12 +269,16 @@ public class ItemsListService {
 
     /**
      * delete an item from a list (only if item is in the list)
+     *
      * @param {String} itemId The id of the item to be deleted
      * @param {String} listId The id of the list where the item is present
      * @return {@link ItemDTO} The updated list DTO
      * @throws {@link NoSuchElementException} if the item or the list does not exist
      */
     public ItemsListDTO deleteItemFromList(String itemId, String listId) {
+        Preconditions.checkArgument(!Strings.isBlank(itemId), "Item id cannot be empty.");
+        Preconditions.checkArgument(!Strings.isBlank(listId), "List id cannot be empty.");
+
         return itemsListRepository.findById(listId)
                 .map(itemsList -> {
                     if (doGetItemFromList(itemsList, itemId).isEmpty())
@@ -251,11 +297,15 @@ public class ItemsListService {
 
     /**
      * delete an item
+     *
      * @param {String} itemId The id of the item to be deleted
      * @return {boolean} Indicate if the item was deleted
      * @throws {@link NoSuchElementException} if the item does not exist
      */
     public boolean deleteItem(String itemId) {
+
+        Preconditions.checkArgument(!Strings.isBlank(itemId), "Item id cannot be empty.");
+
         return itemRepository.findById(itemId)
                 .map(item -> {
                     ItemsList itemsList = item.getList();
@@ -273,11 +323,15 @@ public class ItemsListService {
 
     /**
      * delete all the items from a list
+     *
      * @param {String} listId The id of the list
      * @return {@link ItemDTO} The updated list DTO
      * @throws {@link NoSuchElementException} if the list does not exist
      */
     public ItemsListDTO deleteAllItemsFromList(String listId) {
+
+        Preconditions.checkArgument(!Strings.isBlank(listId), "List id cannot be empty.");
+
         return itemsListRepository.findById(listId)
                 .map(itemsList -> {
                     Iterator<Item> iterator = itemsList.getItems().iterator();
@@ -295,11 +349,15 @@ public class ItemsListService {
 
     /**
      * delete all the items from a list and then delete the list
+     *
      * @param {String} listId The id of the list
      * @return {boolean} Indicate if the list and all its items were deleted
      * @throws {@link NoSuchElementException} if the list does not exist
      */
     public boolean deleteList(String listId) {
+
+        Preconditions.checkArgument(!Strings.isBlank(listId), "List id cannot be empty.");
+
         itemsListRepository.findById(listId)
                 .map(itemsList -> {
                     Iterator<Item> iterator = itemsList.getItems().iterator();
@@ -320,7 +378,7 @@ public class ItemsListService {
     /* CONVERTERS : List Entity <-> List DTO */
 
 
-    public ItemsListValuesDTO getListValuesDTOFromListEntity(ItemsList entity) {
+    private ItemsListValuesDTO getListValuesDTOFromListEntity(ItemsList entity) {
         ItemsListValuesDTO value = new ItemsListValuesDTO();
         value.setName(entity.getName());
         value.setDescription(entity.getDescription());
@@ -328,7 +386,11 @@ public class ItemsListService {
         return value;
     }
 
-    public ItemsListDTO getListDTOFromListEntity(ItemsList entity) {
+    private List<String> getNicknamesForSubjects(ItemsList entity) {
+        return this.userService.getNicknamesForSubjects(entity.getInvites());
+    }
+
+    private ItemsListDTO getListDTOFromListEntity(ItemsList entity) {
         ItemsListDTO dto = new ItemsListDTO();
 
         dto.setId(entity.getId());
@@ -346,7 +408,7 @@ public class ItemsListService {
         return dto;
     }
 
-     private ItemsList updateListEntityFromListValuesDTO(ItemsList entity, ItemsListValuesDTO value) {
+    private ItemsList updateListEntityFromListValuesDTO(ItemsList entity, ItemsListValuesDTO value) {
         entity.setName(value.getName());
         entity.setDescription(value.getDescription());
         entity.setType(value.getType());
@@ -360,9 +422,17 @@ public class ItemsListService {
         return entity;
     }
 
+    private List<ItemsListDTO> getListsDTOFromLists(ListIterator<ItemsList> it ) {
+        List<ItemsListDTO> listsDTO = new ArrayList<>();
+        while (it.hasNext()) {
+            listsDTO.add(this.getListDTOFromListEntity(it.next()));
+        }
+        return listsDTO;
+    }
+
 
     /* CONVERTERS : Item Entity <-> Item DTO */
-    public ItemValuesDTO getItemValuesDTOFromItemEntity(Item entity) {
+    private ItemValuesDTO getItemValuesDTOFromItemEntity(Item entity) {
         ItemValuesDTO value = new ItemValuesDTO();
         value.setLabel(entity.getLabel());
         value.setDescription(entity.getDescription());
@@ -372,7 +442,7 @@ public class ItemsListService {
         return value;
     }
 
-    public ItemDTO getItemDTOFromItemEntity(Item entity) {
+    private ItemDTO getItemDTOFromItemEntity(Item entity) {
         ItemDTO dto = new ItemDTO();
         dto.setId(entity.getId());
         dto.setValue(this.getItemValuesDTOFromItemEntity(entity));
