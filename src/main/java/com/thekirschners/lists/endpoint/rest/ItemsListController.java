@@ -86,16 +86,16 @@ public class ItemsListController {
 
 
     /**
-     * get all the lists owned or shared by the current user filtered by '%nameLike%'
-     * @param nameLike The searchTerm
+     * get all the lists owned or shared by the current user filtered by '%namepattern%'
+     * @param namePattern The searchTerm
      * @return a {@link ResponseEntity} wrapping the retrieved list DTO
      */
     @GetMapping(path = API_ITEMS_LIST)
-    public ResponseEntity<List<ItemsListDTO>> getAllLists(@RequestParam(name="nameLike", required = false, defaultValue = "") String nameLike) {
-        if (Strings.isBlank(nameLike))
+    public ResponseEntity<List<ItemsListDTO>> getAllLists(@RequestParam(name="namePattern", required = false, defaultValue = "") String namePattern) {
+        if (Strings.isBlank(namePattern))
             lists = service.getAllLists();
         else
-            lists = service.getAllListsWithListNamePattern(nameLike);
+            lists = service.getAllListsWithListNamePattern(namePattern);
         return ResponseEntity.ok(lists);
      }
 
